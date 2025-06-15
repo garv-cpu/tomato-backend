@@ -18,6 +18,9 @@ export const placeOrder = async (req, res) => {
       customer_phone,
     } = req.body;
 
+    // Use a short ID instead of JWT for customer_id
+    const shortCustomerId = customer_id.slice(0, 50); // or use MongoDB _id or any unique string < 50 chars
+
     if (!amount || !customer_id || !customer_name || !customer_phone) {
       return res
         .status(400)
@@ -31,13 +34,13 @@ export const placeOrder = async (req, res) => {
       order_amount: amount,
       order_currency: "INR",
       customer_details: {
-        customer_id,
+        customer_id: shortCustomerId,
         customer_phone,
         customer_email,
         customer_name,
       },
       order_meta: {
-        return_url: `${process.env.FRONTEND_URL}/payment-success?order_id={order_id}`,
+        return_url: `${process.env.FRONTEND_URL}/payment-success?order_id=${orderId}`,
       },
     };
 
@@ -55,7 +58,7 @@ export const placeOrder = async (req, res) => {
         .json({ success: false, message: "Failed to create order" });
     }
   } catch (err) {
-    console.log("placeOrder error:", err);
+    console.log("placeOrder error:", err.response?.data || err.message);
     res.status(500).json({ success: false, message: err.message });
   }
 };
