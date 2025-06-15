@@ -1,67 +1,66 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
-import { Cashfree, CFEnvironment } from "cashfree-pg";
 
-const cashfree = new Cashfree(
-  CFEnvironment.PRODUCTION, // or SANDBOX for testing
-  process.env.CASHFREE_CLIENT_ID,
-  process.env.CASHFREE_CLIENT_SECRET
-);
 
 export const placeOrder = async (req, res) => {
-  try {
-    const {
-      amount,
-      customer_id,
-      customer_name,
-      customer_email,
-      customer_phone,
-    } = req.body;
-
-    // Use a short ID instead of JWT for customer_id
-    const shortCustomerId = customer_id.slice(0, 50); // or use MongoDB _id or any unique string < 50 chars
-
-    if (!amount || !customer_id || !customer_name || !customer_phone) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Missing customer details" });
-    }
-
-    const orderId = "order_" + Date.now();
-
-    const orderPayload = {
-      order_id: orderId,
-      order_amount: amount,
-      order_currency: "INR",
-      customer_details: {
-        customer_id: shortCustomerId,
-        customer_phone,
-        customer_email,
+    try {
+      const {
+        amount,
+        customer_id,
         customer_name,
-      },
-      order_meta: {
-        return_url: `${process.env.FRONTEND_URL}/payment-success?order_id=${orderId}`,
-      },
-    };
-
-    const response = await cashfree.PGCreateOrder(orderPayload);
-
-    if (response.status === 200) {
-      return res.json({
-        success: true,
-        payment_session_id: response.data.payment_session_id,
+        customer_email,
+        customer_phone,
+      } = req.body;
+  
+      if (!amount || !customer_id || !customer_name || !customer_phone) {
+        return res
+          .status(400)
+          .json({ success: false, message: "Missing customer details" });
+      }
+  
+      // Optional: Save order in DB
+      const newOrder = new orderModel({
+        customer_id,
+        customer_name,
+        customer_email,
+        customer_phone,
+        amount,
       });
-    } else {
-      console.log("Cashfree error:", response);
-      return res
-        .status(500)
-        .json({ success: false, message: "Failed to create order" });
+      await newOrder.save();
+  
+      // Send email
+      const transporter = nodemailer.createTransport({
+        service: "gmail",
+        auth: {
+          user: process.env.SENDER_EMAIL,
+          pass: process.env.SENDER_EMAIL_PASSWORD,
+        },
+      });
+  
+      const mailOptions = {
+        from: process.env.SENDER_EMAIL,
+        to: "your-email@example.com", // Your email where you want to receive bookings
+        subject: "New Mobile Booking",
+        text: `
+          New booking placed:
+          Name: ${customer_name}
+          Email: ${customer_email}
+          Phone: ${customer_phone}
+          Amount: ₹${amount}
+        `,
+      };
+  
+      await transporter.sendMail(mailOptions);
+  
+      res.status(200).json({
+        success: true,
+        message: "Booking placed and email sent.",
+      });
+    } catch (err) {
+      console.log("placeOrder error:", err);
+      res.status(500).json({ success: false, message: err.message });
     }
-  } catch (err) {
-    console.log("placeOrder error:", err.response?.data || err.message);
-    res.status(500).json({ success: false, message: err.message });
-  }
-};
+  };
 
 export const listOrders = async (req, res) => {
   try {
