@@ -1,6 +1,6 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
-
+import nodemailer from "nodemailer";
 
 export const placeOrder = async (req, res) => {
     try {
