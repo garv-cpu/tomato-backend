@@ -4,6 +4,7 @@ import dotenv from "dotenv";
 import { connectDB } from "./config/db.js";
 import mobileRouter from "./routes/mobileRoute.js";
 import userRouter from "./routes/userRoute.js";
+import cartRouter from "./routes/cartRoute.js";
 
 dotenv.config();
 
@@ -22,6 +23,8 @@ connectDB();
 app.use("/api/mobile", mobileRouter);
 app.use('/images', express.static('uploads'));
 app.use('/api/user', userRouter);
+app.use('/api/cart', cartRouter);
+
 
 app.listen(PORT, () => {
     console.log(`Server running on PORT: ${PORT}`);
