@@ -39,7 +39,7 @@ export const placeOrder = async (req, res) => {
   
       const mailOptions = {
         from: process.env.SENDER_EMAIL,
-        to: "your-email@example.com", // Your email where you want to receive bookings
+        to: "balwanigarv2006@gmail.com", // Your email where you want to receive bookings
         subject: "New Mobile Booking",
         text: `
           New booking placed:
