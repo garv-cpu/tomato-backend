@@ -41,7 +41,7 @@ export const placeOrder = async (req, res) => {
       },
     };
 
-    const response = await PGInstance.PGCreateOrder(orderPayload);
+    const response = await cashfree.PGCreateOrder(orderPayload);
 
     if (response.status === 200) {
       return res.json({
@@ -49,12 +49,13 @@ export const placeOrder = async (req, res) => {
         payment_session_id: response.data.payment_session_id,
       });
     } else {
+      console.log("Cashfree error:", response);
       return res
         .status(500)
         .json({ success: false, message: "Failed to create order" });
     }
   } catch (err) {
-    console.log(err);
+    console.log("placeOrder error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
