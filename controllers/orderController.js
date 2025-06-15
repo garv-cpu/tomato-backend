@@ -9,31 +9,35 @@ const cashfree = new Cashfree(
 );
 
 export const placeOrder = async (req, res) => {
-  const { amount, customer_id, customer_name, customer_email, customer_phone } =
-    req.body;
-
-  try {
-    const orderRequest = {
-      order_amount: amount,
-      order_currency: "INR",
-      customer_details: {
-        customer_id,
-        customer_name,
-        customer_email,
-        customer_phone,
-      },
-      order_meta: {
-        return_url: `https://yourwebsite.com/payment-success?order_id={order_id}`,
-      },
-      order_note: "Mobile booking",
-    };
-
-    const response = await cashfree.PGCreateOrder(orderRequest);
-    const { order_id, payment_session_id } = response.data;
-
-    res.status(200).json({ success: true, order_id, payment_session_id });
-  } catch (error) {
-    console.error(error.response?.data || error.message);
-    res.status(500).json({ success: false, message: "Order creation failed" });
-  }
-};
+    const { amount, customer_id, customer_name, customer_email, customer_phone } = req.body;
+  
+    try {
+      const orderRequest = {
+        order_amount: amount,
+        order_currency: "INR",
+        customer_details: {
+          customer_id,
+          customer_name,
+          customer_email,
+          customer_phone,
+        },
+        order_meta: {
+          return_url: `https://yourwebsite.com/payment-success?order_id={order_id}`,
+        },
+        order_note: "Mobile booking",
+      };
+  
+      const response = await cashfree.PGCreateOrder(orderRequest);
+      const { order_id, payment_session_id } = response.data;
+  
+      return res.status(200).json({ success: true, order_id, payment_session_id });
+    } catch (error) {
+      console.error("❌ Cashfree Error:", error.response?.data || error.message || error);
+      return res.status(500).json({
+        success: false,
+        message: "Order creation failed",
+        error: error.response?.data || error.message,
+      });
+    }
+  };
+  
