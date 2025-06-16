@@ -3,64 +3,65 @@ import userModel from "../models/userModel.js";
 import nodemailer from "nodemailer";
 
 export const placeOrder = async (req, res) => {
-    try {
-      const {
-        amount,
-        customer_id,
-        customer_name,
-        customer_email,
-        customer_phone,
-      } = req.body;
-  
-      if (!amount || !customer_id || !customer_name || !customer_phone) {
-        return res
-          .status(400)
-          .json({ success: false, message: "Missing customer details" });
-      }
-  
-      // Optional: Save order in DB
-      const newOrder = new orderModel({
-        customer_id,
-        customer_name,
-        customer_email,
-        customer_phone,
-        amount,
-      });
-      await newOrder.save();
-  
-      // Send email
-      const transporter = nodemailer.createTransport({
-        service: "gmail",
-        auth: {
-          user: process.env.SENDER_EMAIL,
-          pass: process.env.SENDER_EMAIL_PASSWORD,
-        },
-      });
-  
-      const mailOptions = {
-        from: process.env.SENDER_EMAIL,
-        to: "balwanigarv2006@gmail.com", // Your email where you want to receive bookings
-        subject: "New Mobile Booking",
-        text: `
+  try {
+    const {
+      amount,
+      customer_id,
+      customer_name,
+      customer_email,
+      customer_phone,
+    } = req.body;
+
+    if (!amount || !customer_id || !customer_name || !customer_phone) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Missing customer details" });
+    }
+
+    // Optional: Save order in DB
+    const newOrder = new orderModel({
+      userId: customer_id, // maps to the userId required in schema
+      customer_name,
+      customer_email,
+      customer_phone,
+      amount,
+      address: req.body.address, // pass full address object
+    });
+    await newOrder.save();
+
+    // Send email
+    const transporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: process.env.SENDER_EMAIL,
+        pass: process.env.SENDER_EMAIL_PASSWORD,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.SENDER_EMAIL,
+      to: "balwanigarv2006@gmail.com", // Your email where you want to receive bookings
+      subject: "New Mobile Booking",
+      text: `
           New booking placed:
           Name: ${customer_name}
           Email: ${customer_email}
           Phone: ${customer_phone}
           Amount: ₹${amount}
         `,
-      };
-  
-      await transporter.sendMail(mailOptions);
-  
-      res.status(200).json({
-        success: true,
-        message: "Booking placed and email sent.",
-      });
-    } catch (err) {
-      console.log("placeOrder error:", err);
-      res.status(500).json({ success: false, message: err.message });
-    }
-  };
+    };
+
+    await transporter.sendMail(mailOptions);
+
+    res.status(200).json({
+      success: true,
+      message: "Booking placed and email sent.",
+    });
+  } catch (err) {
+    console.log("placeOrder error:", err);
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
 
 export const listOrders = async (req, res) => {
   try {

@@ -1,39 +1,19 @@
-import mongoose, { mongo } from "mongoose";
+import mongoose from "mongoose";
 
-const orderSchema = new mongoose.Schema(
-  {
-    userId: {
-      type: String,
-      required: true,
-    },
-    items: {
-      type: Array,
-      required: true,
-    },
-    amount: {
-      type: Number,
-      required: true,
-    },
-    address: {
-      type: Object,
-      required: true,
-    },
-    status: {
-      type: String,
-      default: "Booking",
-    },
-    date: {
-      type: Date,
-      default: Date.now(),
-    },
-    payment: {
-      type: Boolean,
-      default: false,
-    },
+const orderSchema = new mongoose.Schema({
+  userId: { type: String, required: true },
+  customer_name: { type: String, required: true },
+  customer_email: { type: String },
+  customer_phone: { type: String, required: true },
+  amount: { type: Number, required: true },
+  address: {
+    street: { type: String },
+    city: { type: String },
+    state: { type: String },
+    zipcode: { type: String },
+    country: { type: String },
   },
-  { timestamps: true }
-);
+  createdAt: { type: Date, default: Date.now },
+});
 
-const orderModel = mongoose.models.order || mongoose.model("order", orderSchema);
-
-export default orderModel;
+export default mongoose.model("orders", orderSchema);
